@@ -1,3 +1,10 @@
-flask
-python-docx
-requests
+flask~=3.1.2
+python-docx~=1.2.0
+requests~=2.32.5
+
+PyMySQL~=1.1.2
+python-dotenv~=1.2.1
+python-dateutil~=2.9.0.post0
+num2words~=0.5.14
+PyJWT~=2.10.1
+flask-cors~=6.0.1

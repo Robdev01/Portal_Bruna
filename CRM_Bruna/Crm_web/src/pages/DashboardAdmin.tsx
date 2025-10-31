@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, Settings, LayoutGrid, FileText, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import logo from "@/images/logo_bruna_sem_fundo.png"
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -90,10 +91,29 @@ const Dashboard = () => {
       {/* 🔹 Cabeçalho */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-heading text-foreground">Portal de Configuração</h1>
-            <p className="text-sm text-muted-foreground">Vivo Capital</p>
+          {/* 🔹 Logo + texto lado a lado */}
+          <div className="flex items-center gap-4">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <img
+                src={logo}
+                alt="Logotipo Bruna Calheira ADV"
+                className="w-12 h-12 object-contain"
+                loading="eager"
+                decoding="sync"
+              />
+            </div>
+
+            <div className="flex flex-col leading-tight">
+              <h1 className="text-xl font-semibold text-foreground">
+                Bruna Calheira ADV
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Painel Administrativo
+              </p>
+            </div>
           </div>
+
+
 
           {/* 🔹 Saudação e botão de logout */}
           <div className="flex items-center gap-4">

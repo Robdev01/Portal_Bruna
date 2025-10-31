@@ -10,7 +10,9 @@ import RegisterUser from "./pages/RegisterUser"
 import Perfis from "./pages/Perfis"
 import Board from "./pages/Board";
 import Form from "./pages/Form";
+
 import NotFound from "./pages/NotFound";
+import PrivateRoute from "./pages/PrivateRoute"
 
 const queryClient = new QueryClient();
 
@@ -21,14 +23,61 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/dashboard-adv" element={<DashboardAdv />} />
-          <Route path="/dashboard-admin" element={<DashboardAdmin />} />
-          <Route path="/Perfis-register" element={<RegisterUser />} />
-          <Route path="/Perfis" element={<Perfis />} />
-          <Route path="/" element={<Login />} />
+          <Route
+            path="/dashboard-adv"
+            element={
+              <PrivateRoute>
+                <DashboardAdv />
+              </PrivateRoute>}
+          />
+
+          <Route
+            path="/dashboard-admin"
+            element={
+              <PrivateRoute>
+                <DashboardAdmin />
+              </PrivateRoute>}
+          />
+
+          <Route
+            path="/Perfis-register"
+            element={
+              <PrivateRoute>
+                <RegisterUser />
+              </PrivateRoute>}
+          />
+
+          <Route
+            path="/Perfis"
+            element={
+              <PrivateRoute>
+                <Perfis />
+              </PrivateRoute>}
+          />
+
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Login />
+              </PrivateRoute>}
+          />
+
           <Route path="/login" element={<Login />} />
-          <Route path="/board" element={<Board />} />
-          <Route path="/form" element={<Form />} />
+          <Route
+            path="/board"
+            element={
+              <PrivateRoute>
+                <Board />
+              </PrivateRoute>}
+          />
+          <Route
+            path="/form"
+            element={
+              <PrivateRoute>
+                <Form />
+              </PrivateRoute>}
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

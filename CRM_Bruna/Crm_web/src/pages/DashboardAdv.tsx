@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, Settings, LayoutGrid, FileText, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import logo from "@/images/logo_bruna_sem_fundo.png"
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -24,16 +25,6 @@ const Dashboard = () => {
     if (permissao !== "admin" && permissao !== "adv" && permissao !== "advogada") {
       toast.error("Acesso negado! Você não tem permissão para acessar esta área.");
       navigate("/dashboard-usuario"); // redireciona para o dashboard comum
-    }
-  }, [navigate]);
-
-  // 🔹 Recupera os dados do usuário do localStorage
-  useEffect(() => {
-    const userData = localStorage.getItem("usuario");
-    if (userData) {
-      setUsuario(JSON.parse(userData));
-    } else {
-      navigate("/login"); // redireciona se não estiver logado
     }
   }, [navigate]);
 
@@ -61,7 +52,7 @@ const Dashboard = () => {
   };
 
   const menuItems = [
-    
+
     {
       title: "Emissão De Documentos",
       description: "Aqui você poderá emitir contrato, declaração e procuração",
@@ -70,7 +61,7 @@ const Dashboard = () => {
       color: "text-accent",
       bgColor: "bg-accent/10",
     },
-  
+
     {
       title: "Documentos",
       description: "Gerenciar documentos",
@@ -94,10 +85,29 @@ const Dashboard = () => {
       {/* 🔹 Cabeçalho */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-heading text-foreground">Portal de Configuração</h1>
-            <p className="text-sm text-muted-foreground">Vivo Capital</p>
+          {/* 🔹 Logo + texto lado a lado */}
+          <div className="flex items-center gap-4">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <img
+                src={logo}
+                alt="Logotipo Bruna Calheira ADV"
+                className="w-12 h-12 object-contain"
+                loading="eager"
+                decoding="sync"
+              />
+            </div>
+
+            <div className="flex flex-col leading-tight">
+              <h1 className="text-xl font-semibold text-foreground">
+                Bruna Calheira ADV
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Painel Administrativo
+              </p>
+            </div>
           </div>
+
+
 
           {/* 🔹 Saudação e botão de logout */}
           <div className="flex items-center gap-4">
@@ -123,7 +133,7 @@ const Dashboard = () => {
         <div className="mb-8">
           <h2 className="text-4xl font-heading text-foreground mb-2">Dashboard</h2>
           <p className="text-muted-foreground">
-            Bem-vindo{usuario?.nome ? `, ${usuario.nome.split(" ")[0]}` : ""}!  
+            Bem-vindo{usuario?.nome ? `, ${usuario.nome.split(" ")[0]}` : ""}!
             Selecione uma opção abaixo.
           </p>
         </div>

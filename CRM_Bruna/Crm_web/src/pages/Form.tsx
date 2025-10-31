@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,13 +44,30 @@ const Form = () => {
     DATAULTIMAPARCELA: "",
     DATACOMMESEXTENSO: "",
   });
+  const [usuario, setUsuario] = useState<{ nome?: string; email?: string } | null>(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("usuario");
+    if (!userData) {
+      navigate("/login");
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    setUsuario(user);
+    const permissao = user.permissoes?.toLowerCase();
+    if (permissao !== "admin" && permissao !== "adv" && permissao !== "advogada") {
+      toast.error("Acesso negado! Você não tem permissão para acessar esta área.");
+      navigate("/*"); // redireciona para o dashboard comum
+    }
+  }, [navigate]);
 
   // 🔹 Atualiza e força letras maiúsculas
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value.toUpperCase(),
+      [name]: value,
     }));
   };
 
@@ -63,10 +80,10 @@ const Form = () => {
       const data = await response.json();
       setFormData((prev) => ({
         ...prev,
-        ENDERECORUA: (data.ENDERECORUA || "").toUpperCase(),
-        BAIRRO: (data.BAIRRO || "").toUpperCase(),
-        ENDERECOCIDADE: (data.ENDERECOCIDADE || "").toUpperCase(),
-        ENDERECOESTADO: (data.ENDERECOESTADO || "").toUpperCase(),
+        ENDERECORUA: (data.ENDERECORUA || ""),
+        BAIRRO: (data.BAIRRO || ""),
+        ENDERECOCIDADE: (data.ENDERECOCIDADE || ""),
+        ENDERECOESTADO: (data.ENDERECOESTADO || ""),
       }));
     } catch (error) {
       console.error("Erro ao buscar CEP:", error);
@@ -132,7 +149,7 @@ const Form = () => {
   // 🔹 Limpa e padroniza o RG (somente números e X, se tiver)
   const formatarRg = (valor: string) => {
     return valor
-      .toUpperCase()
+
       .replace(/[^0-9X]/g, "")
       .slice(0, 12); // limite razoável
   };
@@ -144,10 +161,22 @@ const Form = () => {
       title: "Dados Pessoais",
       fields: [
         { name: "NOME", label: "Nome Completo", type: "text" },
-        { name: "NOMEREPRESENTANTE", label: "Nome do Representante", type: "text" },
+
         { name: "NACIONALDADE", label: "Nacionalidade", type: "text" },
-        { name: "DATANASCIMENTO", label: "Data de Nascimento", type: "date" },
-        { name: "ESTADOCIVIL", label: "Estado Civil", type: "text" },
+
+        {
+          name: "ESTADOCIVIL",
+          label: "Estado Civil",
+          type: "select",
+          options: [
+            { value: "solteiro", label: "Solteiro(a)" },
+            { value: "casado", label: "Casado(a)" },
+            { value: "divorciado", label: "Divorciado(a)" },
+            { value: "viuvo", label: "Viúvo(a)" },
+            { value: "uniao_estavel", label: "União Estável" }
+          ]
+        },
+
       ],
     },
     {
@@ -180,12 +209,9 @@ const Form = () => {
       title: "Valores e Parcelas",
       fields: [
         { name: "VALORREAIS", label: "Valor em Reais", type: "text" },
-
         { name: "VALORENTRADA", label: "Valor da Entrada", type: "text" },
-
         { name: "NUMEROPARCELAS", label: "Número de Parcelas", type: "number" },
         { name: "VALORPARCELA", label: "Valor da Parcela", type: "text" },
-
         { name: "VENCIMENTODIA", label: "Dia do Vencimento", type: "number" },
         { name: "DATAPRIMEIRAPARCELA", label: "Data da Primeira Parcela", type: "date" },
         { name: "DATAULTIMAPARCELA", label: "Data da Última Parcela", type: "date" },
@@ -261,6 +287,16 @@ const Form = () => {
                       />
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="DATANASCIMENTO">Data Nascimento da Criança</Label>
+                      <Input
+                        id="DATANASCIMENTO"
+                        name="DATANASCIMENTO"
+                        type="date"
+                        value={formData.DATANASCIMENTO}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="NOMERESPONSAVEL">Nome do Responsável</Label>
                       <Input
                         id="NOMERESPONSAVEL"
@@ -287,52 +323,67 @@ const Form = () => {
                   {section.fields.map((field) => (
                     <div key={field.name} className="space-y-2">
                       <Label htmlFor={field.name}>{field.label}</Label>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type={field.type}
-                        value={formData[field.name as keyof typeof formData]}
-                        onChange={(e) => {
-                          const { name, value } = e.target;
-                          let newValue = value.toUpperCase();
-                          let updatedData = { ...formData };
-                        
-                          // 🔹 CPF: aplica formatação ao digitar
-                          if (name === "NUMEROCPF") {
-                            newValue = formatarCpf(value);
+                      {field.type === "select" ? (
+                        <Select
+                          value={formData[field.name] || ""}
+                          onValueChange={(value) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              [field.name]: value,
+                            }))
                           }
-                        
-                          // 🔹 RG: limpa caracteres inválidos
-                          if (name === "NUMERORG") {
-                            newValue = formatarRg(value);
-                          }
-                        
-                          updatedData[name] = newValue;
-                        
-                          // 🔹 CEP: busca endereço automático
-                          if (name === "ENDERECOCEP") {
-                            const cep = value.replace(/\D/g, "");
-                            updatedData.ENDERECOCEP = cep;
-                            setFormData(updatedData);
-                            if (cep.length === 8) buscarEnderecoPorCep(cep);
-                            return;
-                          }
-                        
-                          // 🔹 Parcelas automáticas
-                          if (name === "NUMEROPARCELAS" || name === "DATAPRIMEIRAPARCELA") {
-                            const ultima = calcularDataUltimaParcela(
-                              name === "NUMEROPARCELAS" ? value : formData.NUMEROPARCELAS,
-                              name === "DATAPRIMEIRAPARCELA" ? value : formData.DATAPRIMEIRAPARCELA
-                            );
-                            if (ultima) updatedData.DATAULTIMAPARCELA = ultima;
-                          }
-                        
-                          setFormData(updatedData);
-                        }}
-                        
+                        >
+                          <SelectTrigger className="bg-muted border-border">
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.options?.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          type={field.type}
+                          value={formData[field.name as keyof typeof formData]}
+                          onChange={(e) => {
+                            const { name, value } = e.target;
+                            let newValue = value;
+                            let updatedData = { ...formData };
 
-                        className="bg-muted border-border"
-                      />
+                            // 🔹 CPF formatado
+                            if (name === "NUMEROCPF") newValue = formatarCpf(value);
+                            // 🔹 RG tratado
+                            if (name === "NUMERORG") newValue = formatarRg(value);
+
+                            updatedData[name] = newValue;
+
+                            // 🔹 CEP → busca endereço automático
+                            if (name === "ENDERECOCEP") {
+                              const cep = value.replace(/\D/g, "");
+                              updatedData.ENDERECOCEP = cep;
+                              setFormData(updatedData);
+                              if (cep.length === 8) buscarEnderecoPorCep(cep);
+                              return;
+                            }
+
+                            // 🔹 Parcelas automáticas
+                            if (name === "NUMEROPARCELAS" || name === "DATAPRIMEIRAPARCELA") {
+                              const ultima = calcularDataUltimaParcela(
+                                name === "NUMEROPARCELAS" ? value : formData.NUMEROPARCELAS,
+                                name === "DATAPRIMEIRAPARCELA" ? value : formData.DATAPRIMEIRAPARCELA
+                              );
+                              if (ultima) updatedData.DATAULTIMAPARCELA = ultima;
+                            }
+                            setFormData(updatedData);
+                          }}
+                          className="bg-muted border-border"
+                        />
+                      )}
                     </div>
                   ))}
                 </div>

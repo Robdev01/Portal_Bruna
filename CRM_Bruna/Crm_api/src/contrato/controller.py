@@ -106,6 +106,10 @@ def gerar_documento(dados: dict):
     Gera os documentos conforme o tipo informado:
     - com_crianca → contrato mãe + procurações mãe/filho + declarações mãe/filho
     - sem_crianca → contrato + procuração simples + declaração simples
+    O nome do arquivo gerado segue o padrão:
+        <tipo>_<nome>_<cpf>.docx
+    O arquivo ZIP final segue o mesmo padrão:
+        <nome_base>.zip
     """
     tipo = dados.get("tipo", "").lower()
     if not tipo:
@@ -137,19 +141,47 @@ def gerar_documento(dados: dict):
 
     # 🔹 Gera e compacta os arquivos
     arquivos_gerados = []
-    for nome, modelo_path in modelos:
-        cpf_limpo = re.sub(r'\D', '', dados.get("NUMEROCPF", ""))  # remove pontos e traços
-        nome_limpo = re.sub(r'[^A-Za-z0-9_]+', '_', dados.get("NOME", "").strip())  # tira acentos/espaços
-        nome_saida = f"{nome_limpo}_{cpf_limpo}.docx"
+    nome_base_zip = None
+
+    for tipo_doc, modelo_path in modelos:
+        nome_pessoa = dados.get("NOME", "SemNome").strip()
+        cpf_pessoa = re.sub(r'\D', '', dados.get("NUMEROCPF", ""))
+        nome_limpo = re.sub(r'[^A-Za-z0-9_]+', '_', nome_pessoa)
+
+        # Monta nome do arquivo individual
+        if cpf_pessoa:
+            nome_saida = f"{tipo_doc}_{nome_limpo}_{cpf_pessoa}.docx"
+        else:
+            nome_saida = f"{tipo_doc}_{nome_limpo}.docx"
 
         output_path = OUTPUT_DIR / nome_saida
         preencher_modelo(str(modelo_path), dados, str(output_path))
         arquivos_gerados.append(output_path)
 
-    zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+        print(f"📄 Documento gerado: {output_path.name}")
+
+        # Guarda o nome base a partir do contrato
+        if tipo_doc == "contrato" and not nome_base_zip:
+            nome_base_zip = nome_saida.replace(".docx", "")
+
+    # 🔹 Define nome do ZIP com base no contrato
+    if not nome_base_zip:
+        nome_base_zip = f"documentos_{nome_limpo}"
+
+    zip_nome = f"{nome_base_zip}.zip"
+    zip_path = OUTPUT_DIR / zip_nome
+
+    # Compacta os arquivos
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for file_path in arquivos_gerados:
             zipf.write(file_path, arcname=file_path.name)
+
+    print(f"🗜️ ZIP gerado: {zip_path.name}")
+
+    # Retorna buffer para download (mantendo compatibilidade)
+    zip_buffer = BytesIO()
+    with open(zip_path, "rb") as f:
+        zip_buffer.write(f.read())
     zip_buffer.seek(0)
 
     return zip_buffer
