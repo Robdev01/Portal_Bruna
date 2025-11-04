@@ -8,15 +8,18 @@ interface Props {
 const PrivateRoute = ({ children }: Props) => {
   try {
     const usuarioRaw = localStorage.getItem('usuario');
-    if (!usuarioRaw) return <Navigate to="/login" replace />;
+    const token = localStorage.getItem('token');
+    if (!usuarioRaw || !token) return <Navigate to="/login" replace />;
 
     const usuario = JSON.parse(usuarioRaw);
-    if (!usuario?.tokem || !usuario?.nome) return <Navigate to="/login" replace />;
+    if (!usuario?.nome || !usuario?.permissoes)
+      return <Navigate to="/login" replace />;
 
     return <>{children}</>;
   } catch {
     return <Navigate to="/login" replace />;
   }
 };
+
 
 export default PrivateRoute;

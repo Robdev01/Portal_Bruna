@@ -22,9 +22,9 @@ const Dashboard = () => {
 
     // 🔐 Verifica se tem permissão (somente admin ou adv)
     const permissao = user.permissoes?.toLowerCase();
-    if (permissao !== "admin" && permissao !== "adv" && permissao !== "advogada") {
+    if (permissao == "admin" && permissao == "adv" && permissao !== "advogada") {
       toast.error("Acesso negado! Você não tem permissão para acessar esta área.");
-      navigate("/dashboard-usuario"); // redireciona para o dashboard comum
+      navigate("/"); // redireciona para o dashboard comum
     }
   }, [navigate]);
 
